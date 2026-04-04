@@ -1,41 +1,47 @@
-import { countries, sections } from './data.js';
-
 let activeCountry = null;
 let activeSection = 'overview';
 
-// ── DOM refs ──
-const countryGrid = document.getElementById('countryGrid');
-const tabsEl      = document.getElementById('tabs');
-const contentEl   = document.getElementById('content');
-
-// ── Render helpers ──
-
 function renderCountries() {
-  countryGrid.innerHTML = Object.entries(countries).map(([id, c]) =>
-    `<button class="country-btn ${activeCountry === id ? 'active' : ''}" data-country="${id}">
+  const grid = document.getElementById('countryGrid');
+  grid.innerHTML = Object.entries(countries).map(([id, c]) =>
+    `<button class="country-btn ${activeCountry===id?'active':''}" onclick="selectCountry('${id}')">
       <span class="flag">${c.flag}</span>${c.name}
     </button>`
   ).join('');
 }
 
 function renderTabs() {
-  if (!activeCountry) { tabsEl.innerHTML = ''; return; }
-  tabsEl.innerHTML = sections.map(s =>
-    `<button class="tab-btn ${activeSection === s.id ? 'active' : ''}" data-tab="${s.id}">${s.label}</button>`
+  const t = document.getElementById('tabs');
+  if (!activeCountry) { t.innerHTML = ''; return; }
+  t.innerHTML = sections.map(s =>
+    `<button class="tab-btn ${activeSection===s.id?'active':''}" onclick="selectTab('${s.id}')">${s.label}</button>`
   ).join('');
 }
 
+function selectCountry(id) {
+  activeCountry = id;
+  activeSection = 'overview';
+  renderCountries();
+  renderTabs();
+  renderContent();
+}
+
+function selectTab(id) {
+  activeSection = id;
+  renderTabs();
+  renderContent();
+}
+
 function renderContent() {
+  const el = document.getElementById('content');
   if (!activeCountry) {
-    contentEl.innerHTML = '<div class="no-country"><span class="arrow">\u261D\uFE0F</span>\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0441\u0442\u0440\u0430\u043D\u0443, \u043A\u0443\u0434\u0430 \u0435\u0434\u0435\u0442\u0435</div>';
+    el.innerHTML = '<div class="no-country"><span class="arrow">☝️</span>Выберите страну, куда едете</div>';
     return;
   }
   const c = countries[activeCountry];
-  const renderers = { overview: renderOverview, rights: renderRights, redflags: renderRedflags, money: renderMoney, contacts: renderContacts, checklist: renderChecklist };
-  contentEl.innerHTML = renderers[activeSection](c);
+  const renderers = { overview: renderOverview, culture: renderCulture, rights: renderRights, redflags: renderRedflags, money: renderMoney, faq: renderFaq, contacts: renderContacts, pack: renderPack, checklist: renderChecklist };
+  el.innerHTML = renderers[activeSection](c);
 }
-
-// ── Section renderers ──
 
 function renderOverview(c) {
   return `
@@ -43,93 +49,112 @@ function renderOverview(c) {
       <div class="stat-box"><span class="num">${c.flag}</span><span class="label">${c.name}</span></div>
       <div class="stat-box"><span class="num" style="font-size:16px">${c.rate}</span><span class="label">${c.currency}</span></div>
     </div>
-    <div class="info-card">
-      <h3><span class="icon">\uD83D\uDCBC</span> \u0412\u043E\u0441\u0442\u0440\u0435\u0431\u043E\u0432\u0430\u043D\u043D\u044B\u0435 \u043F\u0440\u043E\u0444\u0435\u0441\u0441\u0438\u0438</h3>
-      <p>${c.professions}</p>
+    <div class="info-card"><h3><span class="icon">💼</span> Востребованные профессии</h3><p>${c.professions}</p></div>
+    <div class="info-card"><h3><span class="icon">💵</span> Минимальная зарплата</h3><p>${c.minWage}</p></div>
+    <div class="info-card"><h3><span class="icon">📄</span> Документ на проживание</h3><p>${c.residenceDoc}</p></div>
+    <div class="info-card"><h3><span class="icon">🌡️</span> Климат</h3><p>${c.climate}</p></div>
+    <div class="info-card"><h3><span class="icon">⏰</span> Рабочее время</h3><p>${c.workHours}</p><p style="margin-top:6px"><strong>Сверхурочные:</strong> ${c.overtime}</p></div>`;
+}
+
+function renderCulture(c) {
+  return `
+    <div class="info-card culture-card">
+      <h3><span class="icon">👗</span> Одежда</h3>
+      <p>${c.dress}</p>
     </div>
-    <div class="info-card">
-      <h3><span class="icon">\uD83D\uDCB5</span> \u041C\u0438\u043D\u0438\u043C\u0430\u043B\u044C\u043D\u0430\u044F \u0437\u0430\u0440\u043F\u043B\u0430\u0442\u0430</h3>
-      <p>${c.minWage}</p>
+    <div class="info-card" style="border-left:3px solid var(--accent)">
+      <h3><span class="icon">🌙</span> Рамадан</h3>
+      <p>${c.ramadan}</p>
     </div>
-    <div class="info-card">
-      <h3><span class="icon">\uD83D\uDCC4</span> \u0414\u043E\u043A\u0443\u043C\u0435\u043D\u0442 \u043D\u0430 \u043F\u0440\u043E\u0436\u0438\u0432\u0430\u043D\u0438\u0435</h3>
-      <p>${c.residenceDoc}</p>
+    <div class="info-card ${c.alcohol.includes('запрещён') || c.alcohol.includes('Запрещён') ? 'red-flag' : 'culture-card'}">
+      <h3><span class="icon">🍷</span> Алкоголь</h3>
+      <p>${c.alcohol}</p>
     </div>
-    <div class="info-card">
-      <h3><span class="icon">\uD83C\uDF21\uFE0F</span> \u041A\u043B\u0438\u043C\u0430\u0442</h3>
-      <p>${c.climate}</p>
+    <div class="info-card culture-card">
+      <h3><span class="icon">📸</span> Важно знать</h3>
+      <p>${c.culture_extra}</p>
     </div>
-    <div class="info-card">
-      <h3><span class="icon">\u23F0</span> \u0420\u0430\u0431\u043E\u0447\u0435\u0435 \u0432\u0440\u0435\u043C\u044F</h3>
-      <p>${c.workHours}</p>
-      <p style="margin-top:6px"><strong>\u0421\u0432\u0435\u0440\u0445\u0443\u0440\u043E\u0447\u043D\u044B\u0435:</strong> ${c.overtime}</p>
+    <div class="info-card red-flag">
+      <h3><span class="icon">🚫</span> Категорически запрещено</h3>
+      <ul>
+        <li>Внебрачные отношения — <strong>уголовное наказание</strong></li>
+        <li>Публичные проявления привязанности (поцелуи, объятия)</li>
+        <li>Оскорбление религии, правителей, государства</li>
+        <li>Фотографирование людей без разрешения</li>
+        <li>Наркотики — <strong>вплоть до смертной казни</strong></li>
+        <li>Участие в протестах и митингах</li>
+      </ul>
+    </div>
+    <div class="info-card tip-card">
+      <h3><span class="icon">💡</span> Советы</h3>
+      <ul>
+        <li>Приветствие: правая рука к сердцу + <strong>«Ас-саляму алейкум»</strong></li>
+        <li>Левая рука считается нечистой — не передавайте ей предметы</li>
+        <li>В пятницу многие заведения не работают днём</li>
+        <li>Не обсуждайте политику и религию</li>
+        <li>Будьте терпеливы — темп жизни может отличаться</li>
+      </ul>
     </div>`;
 }
 
 function renderRights(c) {
   return `
-    <div class="info-card tip-card">
-      <h3><span class="icon">\u2696\uFE0F</span> \u0427\u0442\u043E \u0433\u0430\u0440\u0430\u043D\u0442\u0438\u0440\u0443\u0435\u0442 \u0437\u0430\u043A\u043E\u043D</h3>
+    <div class="info-card tip-card"><h3><span class="icon">⚖️</span> Что гарантирует закон</h3>
       <ul>
-        <li>\u0417\u0430\u0440\u043F\u043B\u0430\u0442\u0430 \u0434\u043E\u043B\u0436\u043D\u0430 \u0431\u044B\u0442\u044C <strong>\u043F\u0440\u043E\u043F\u0438\u0441\u0430\u043D\u0430 \u0432 \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442\u0435</strong> \u0438 \u0432\u044B\u043F\u043B\u0430\u0447\u0438\u0432\u0430\u0442\u044C\u0441\u044F \u0432\u043E\u0432\u0440\u0435\u043C\u044F</li>
-        <li>\u0421\u0432\u0435\u0440\u0445\u0443\u0440\u043E\u0447\u043D\u0430\u044F \u0440\u0430\u0431\u043E\u0442\u0430 <strong>\u043E\u043F\u043B\u0430\u0447\u0438\u0432\u0430\u0435\u0442\u0441\u044F \u0434\u043E\u043F\u043E\u043B\u043D\u0438\u0442\u0435\u043B\u044C\u043D\u043E</strong></li>
-        <li>\u0412\u044B \u0438\u043C\u0435\u0435\u0442\u0435 \u043F\u0440\u0430\u0432\u043E \u043D\u0430 <strong>\u043E\u0442\u0434\u044B\u0445, \u043E\u0442\u043F\u0443\u0441\u043A</strong> \u0438 \u0432\u044B\u0445\u043E\u0434\u043D\u044B\u0435</li>
-        <li>\u041F\u0440\u0438\u043D\u0443\u0434\u0438\u0442\u0435\u043B\u044C\u043D\u044B\u0439 \u0442\u0440\u0443\u0434 \u0438 \u0434\u0438\u0441\u043A\u0440\u0438\u043C\u0438\u043D\u0430\u0446\u0438\u044F <strong>\u0437\u0430\u043F\u0440\u0435\u0449\u0435\u043D\u044B</strong></li>
-        <li>\u0420\u0430\u0431\u043E\u0442\u043E\u0434\u0430\u0442\u0435\u043B\u044C \u043E\u0431\u044F\u0437\u0430\u043D <strong>\u043E\u0444\u043E\u0440\u043C\u0438\u0442\u044C \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B</strong> \u0437\u0430 \u0441\u0432\u043E\u0439 \u0441\u0447\u0451\u0442</li>
+        <li>Зарплата должна быть <strong>прописана в контракте</strong> и выплачиваться вовремя</li>
+        <li>Сверхурочная работа <strong>оплачивается дополнительно</strong></li>
+        <li>Вы имеете право на <strong>отдых, отпуск</strong> и выходные</li>
+        <li>Принудительный труд и дискриминация <strong>запрещены</strong></li>
+        <li>Работодатель обязан <strong>оформить документы</strong> за свой счёт</li>
       </ul>
     </div>
-    <div class="info-card">
-      <h3><span class="icon">\uD83D\uDCDD</span> \u0427\u0442\u043E \u043F\u0440\u043E\u0432\u0435\u0440\u0438\u0442\u044C \u0432 \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442\u0435</h3>
+    <div class="info-card"><h3><span class="icon">📝</span> Что проверить в контракте</h3>
       <ul>
-        <li><strong>\u0417\u0430\u0440\u043F\u043B\u0430\u0442\u0443</strong> \u2014 \u0442\u043E\u0447\u043D\u0430\u044F \u0441\u0443\u043C\u043C\u0430, \u0432\u0430\u043B\u044E\u0442\u0430, \u0441\u0440\u043E\u043A\u0438 \u0432\u044B\u043F\u043B\u0430\u0442\u044B</li>
-        <li><strong>\u0414\u043E\u043B\u0436\u043D\u043E\u0441\u0442\u044C</strong> \u2014 \u0441\u043E\u0432\u043F\u0430\u0434\u0430\u0435\u0442 \u043B\u0438 \u0441 \u0442\u0435\u043C, \u0447\u0442\u043E \u043E\u0431\u0435\u0449\u0430\u043B\u0438</li>
-        <li><strong>\u0420\u0430\u0431\u043E\u0447\u0435\u0435 \u0432\u0440\u0435\u043C\u044F</strong> \u2014 \u0447\u0430\u0441\u044B, \u0432\u044B\u0445\u043E\u0434\u043D\u044B\u0435, \u0441\u0432\u0435\u0440\u0445\u0443\u0440\u043E\u0447\u043D\u044B\u0435</li>
-        <li><strong>\u0416\u0438\u043B\u044C\u0451 \u0438 \u043F\u0438\u0442\u0430\u043D\u0438\u0435</strong> \u2014 \u043A\u0442\u043E \u043E\u0431\u0435\u0441\u043F\u0435\u0447\u0438\u0432\u0430\u0435\u0442, \u0437\u0430 \u0447\u0435\u0439 \u0441\u0447\u0451\u0442</li>
-        <li><strong>\u0421\u0440\u043E\u043A \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442\u0430</strong> \u2014 \u043D\u0430\u0447\u0430\u043B\u043E, \u043A\u043E\u043D\u0435\u0446, \u0443\u0441\u043B\u043E\u0432\u0438\u044F \u043F\u0440\u043E\u0434\u043B\u0435\u043D\u0438\u044F</li>
-        <li><strong>\u041C\u0435\u0434\u0438\u0446\u0438\u043D\u0441\u043A\u043E\u0435 \u043E\u0431\u0441\u043B\u0443\u0436\u0438\u0432\u0430\u043D\u0438\u0435</strong> \u2014 \u0435\u0441\u0442\u044C \u043B\u0438 \u0441\u0442\u0440\u0430\u0445\u043E\u0432\u043A\u0430</li>
+        <li><strong>Зарплату</strong> — точная сумма, валюта, сроки выплаты</li>
+        <li><strong>Должность</strong> — совпадает ли с тем, что обещали</li>
+        <li><strong>Рабочее время</strong> — часы, выходные, сверхурочные</li>
+        <li><strong>Жильё и питание</strong> — кто обеспечивает, за чей счёт</li>
+        <li><strong>Срок контракта</strong> — начало, конец, условия продления</li>
+        <li><strong>Медицинское обслуживание</strong> — есть ли страховка</li>
       </ul>
     </div>
-    <div class="info-card">
-      <h3><span class="icon">\uD83C\uDFDB\uFE0F</span> \u041A\u0443\u0434\u0430 \u0436\u0430\u043B\u043E\u0432\u0430\u0442\u044C\u0441\u044F</h3>
-      <p>\u0415\u0441\u043B\u0438 \u0440\u0430\u0431\u043E\u0442\u043E\u0434\u0430\u0442\u0435\u043B\u044C \u043D\u0430\u0440\u0443\u0448\u0430\u0435\u0442 \u0432\u0430\u0448\u0438 \u043F\u0440\u0430\u0432\u0430 \u2014 \u043F\u043E\u0434\u0430\u0439\u0442\u0435 \u0436\u0430\u043B\u043E\u0431\u0443 \u0432 <strong>${c.laborName}</strong>. \u042D\u0442\u043E \u043C\u043E\u0436\u043D\u043E \u0441\u0434\u0435\u043B\u0430\u0442\u044C \u043E\u043D\u043B\u0430\u0439\u043D, \u043F\u043E \u0442\u0435\u043B\u0435\u0444\u043E\u043D\u0443 \u0438\u043B\u0438 \u043B\u0438\u0447\u043D\u043E. \u0412 \u0431\u043E\u043B\u044C\u0448\u0438\u043D\u0441\u0442\u0432\u0435 \u0441\u0442\u0440\u0430\u043D \u0441\u043D\u0430\u0447\u0430\u043B\u0430 \u043F\u044B\u0442\u0430\u044E\u0442\u0441\u044F \u0440\u0435\u0448\u0438\u0442\u044C \u043C\u0438\u0440\u043D\u044B\u043C \u043F\u0443\u0442\u0451\u043C.</p>
-      <p style="margin-top:10px"><strong>\u0421\u0438\u0441\u0442\u0435\u043C\u0430 \u0437\u0430\u0449\u0438\u0442\u044B \u0437\u0430\u0440\u043F\u043B\u0430\u0442\u044B:</strong> ${c.wageSystem}</p>
+    <div class="info-card"><h3><span class="icon">🏛️</span> Куда жаловаться</h3>
+      <p>Если работодатель нарушает ваши права — подайте жалобу в <strong>${c.laborName}</strong>. Можно онлайн, по телефону или лично.</p>
+      <p style="margin-top:10px"><strong>Защита зарплаты:</strong> ${c.wageSystem}</p>
     </div>`;
 }
 
 function renderRedflags(c) {
   return `
-    <div class="info-card red-flag">
-      <h3><span class="icon">\uD83D\uDEA9</span> \u0421\u0442\u043E\u043F! \u041D\u0435 \u0441\u043E\u0433\u043B\u0430\u0448\u0430\u0439\u0442\u0435\u0441\u044C, \u0435\u0441\u043B\u0438:</h3>
+    <div class="info-card red-flag"><h3><span class="icon">🚩</span> Стоп! Не соглашайтесь, если:</h3>
       <ul>
-        <li>\u0412\u0430\u043C <strong>\u043D\u0435 \u0434\u0430\u044E\u0442 \u043A\u043E\u043F\u0438\u044E \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442\u0430</strong> \u0438\u043B\u0438 \u043D\u0435 \u043E\u0431\u044A\u044F\u0441\u043D\u044F\u044E\u0442 \u0435\u0433\u043E</li>
-        <li>\u0412 \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442\u0435 \u043D\u0430\u043F\u0438\u0441\u0430\u043D\u0430 <strong>\u0434\u0440\u0443\u0433\u0430\u044F \u0437\u0430\u0440\u043F\u043B\u0430\u0442\u0430</strong>, \u0447\u0435\u043C \u043E\u0431\u0435\u0449\u0430\u043B\u0438 \u0443\u0441\u0442\u043D\u043E</li>
-        <li>\u041E\u0431\u0435\u0449\u0430\u044E\u0442 \u043F\u043B\u0430\u0442\u0438\u0442\u044C <strong>\u00AB\u043D\u0430\u043B\u0438\u0447\u043A\u043E\u0439\u00BB \u0431\u0435\u0437 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u043E\u0432</strong></li>
-        <li>\u0420\u0430\u0431\u043E\u0442\u043E\u0434\u0430\u0442\u0435\u043B\u044C <strong>\u0437\u0430\u0431\u0438\u0440\u0430\u0435\u0442 \u0432\u0430\u0448 \u043F\u0430\u0441\u043F\u043E\u0440\u0442</strong> \u2014 \u044D\u0442\u043E \u043D\u0435\u0437\u0430\u043A\u043E\u043D\u043D\u043E!</li>
-        <li>\u041F\u0440\u043E\u0441\u044F\u0442 <strong>\u043F\u043E\u0434\u043F\u0438\u0441\u0430\u0442\u044C \u0447\u0442\u043E-\u0442\u043E \u043D\u0430 \u044F\u0437\u044B\u043A\u0435</strong>, \u043A\u043E\u0442\u043E\u0440\u044B\u0439 \u043D\u0435 \u043F\u043E\u043D\u0438\u043C\u0430\u0435\u0442\u0435</li>
-        <li>\u0418\u0437 \u0437\u0430\u0440\u043F\u043B\u0430\u0442\u044B \u0434\u0435\u043B\u0430\u044E\u0442 <strong>\u043D\u0435\u043F\u043E\u043D\u044F\u0442\u043D\u044B\u0435 \u0443\u0434\u0435\u0440\u0436\u0430\u043D\u0438\u044F</strong></li>
-        <li>\u0417\u0430\u0441\u0442\u0430\u0432\u043B\u044F\u044E\u0442 \u0440\u0430\u0431\u043E\u0442\u0430\u0442\u044C <strong>\u0443 \u0434\u0440\u0443\u0433\u043E\u0433\u043E \u0440\u0430\u0431\u043E\u0442\u043E\u0434\u0430\u0442\u0435\u043B\u044F</strong>, \u0447\u0435\u043C \u0432 \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442\u0435</li>
-        <li>\u0412\u0430\u0441 \u0437\u0430\u0441\u0442\u0430\u0432\u043B\u044F\u044E\u0442 <strong>\u043E\u043F\u043B\u0430\u0447\u0438\u0432\u0430\u0442\u044C \u0440\u0430\u0437\u0440\u0435\u0448\u0435\u043D\u0438\u0435 \u043D\u0430 \u0440\u0430\u0431\u043E\u0442\u0443</strong> \u2014 \u044D\u0442\u043E \u043E\u0431\u044F\u0437\u0430\u043D\u043D\u043E\u0441\u0442\u044C \u0440\u0430\u0431\u043E\u0442\u043E\u0434\u0430\u0442\u0435\u043B\u044F</li>
+        <li>Вам <strong>не дают копию контракта</strong> или не объясняют его</li>
+        <li>В контракте написана <strong>другая зарплата</strong>, чем обещали устно</li>
+        <li>Обещают платить <strong>«наличкой» без документов</strong></li>
+        <li>Работодатель <strong>забирает ваш паспорт</strong> — это незаконно!</li>
+        <li>Просят <strong>подписать что-то на языке</strong>, который не понимаете</li>
+        <li>Из зарплаты делают <strong>непонятные удержания</strong></li>
+        <li>Заставляют работать <strong>у другого работодателя</strong>, чем в контракте</li>
+        <li>Вас заставляют <strong>оплачивать разрешение на работу</strong></li>
       </ul>
     </div>
-    <div class="info-card red-flag">
-      <h3><span class="icon">\u26A0\uFE0F</span> \u041F\u0440\u0438\u0437\u043D\u0430\u043A\u0438 \u0442\u043E\u0440\u0433\u043E\u0432\u043B\u0438 \u043B\u044E\u0434\u044C\u043C\u0438</h3>
+    <div class="info-card red-flag"><h3><span class="icon">⚠️</span> Признаки торговли людьми</h3>
       <ul>
-        <li>\u0418\u0437\u044A\u044F\u0442\u0438\u0435 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u043E\u0432</li>
-        <li>\u041E\u0433\u0440\u0430\u043D\u0438\u0447\u0435\u043D\u0438\u0435 \u0441\u0432\u043E\u0431\u043E\u0434\u044B \u043F\u0435\u0440\u0435\u0434\u0432\u0438\u0436\u0435\u043D\u0438\u044F</li>
-        <li>\u0423\u0433\u0440\u043E\u0437\u044B, \u043D\u0430\u0441\u0438\u043B\u0438\u0435, \u0448\u0430\u043D\u0442\u0430\u0436</li>
-        <li>\u041D\u0435\u0432\u044B\u043F\u043B\u0430\u0442\u0430 \u0437\u0430\u0440\u043F\u043B\u0430\u0442\u044B \u0438 \u0434\u043E\u043B\u0433\u043E\u0432\u0430\u044F \u0437\u0430\u0432\u0438\u0441\u0438\u043C\u043E\u0441\u0442\u044C</li>
-        <li>\u041F\u0440\u0438\u043D\u0443\u0436\u0434\u0435\u043D\u0438\u0435 \u043A \u0440\u0430\u0431\u043E\u0442\u0435, \u043D\u0430 \u043A\u043E\u0442\u043E\u0440\u0443\u044E \u043D\u0435 \u0441\u043E\u0433\u043B\u0430\u0448\u0430\u043B\u0438\u0441\u044C</li>
+        <li>Изъятие документов</li>
+        <li>Ограничение свободы передвижения</li>
+        <li>Угрозы, насилие, шантаж</li>
+        <li>Невыплата зарплаты и долговая зависимость</li>
+        <li>Принуждение к работе, на которую не соглашались</li>
       </ul>
-      <p style="margin-top:12px;color:var(--danger);font-weight:700">\u2192 \u041D\u0435\u043C\u0435\u0434\u043B\u0435\u043D\u043D\u043E \u0437\u0432\u043E\u043D\u0438\u0442\u0435 \u0432 \u043F\u043E\u0441\u043E\u043B\u044C\u0441\u0442\u0432\u043E \u0438\u043B\u0438 \u043F\u043E\u043B\u0438\u0446\u0438\u044E!</p>
+      <p style="margin-top:12px;color:var(--danger);font-weight:700">→ Немедленно звоните в посольство или полицию!</p>
     </div>
-    <div class="info-card tip-card">
-      <h3><span class="icon">\uD83D\uDEE1\uFE0F</span> \u041A\u0430\u043A \u0441\u0435\u0431\u044F \u0437\u0430\u0449\u0438\u0442\u0438\u0442\u044C</h3>
+    <div class="info-card tip-card"><h3><span class="icon">🛡️</span> Как себя защитить</h3>
       <ul>
-        <li><strong>\u041D\u0438\u043A\u043E\u0433\u0434\u0430</strong> \u043D\u0435 \u043E\u0442\u0434\u0430\u0432\u0430\u0439\u0442\u0435 \u043E\u0440\u0438\u0433\u0438\u043D\u0430\u043B \u043F\u0430\u0441\u043F\u043E\u0440\u0442\u0430</li>
-        <li>\u0425\u0440\u0430\u043D\u0438\u0442\u0435 <strong>\u043A\u043E\u043F\u0438\u0438 \u0432\u0441\u0435\u0445 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u043E\u0432</strong> \u043E\u0442\u0434\u0435\u043B\u044C\u043D\u043E + \u0444\u043E\u0442\u043E \u0432 \u0442\u0435\u043B\u0435\u0444\u043E\u043D\u0435</li>
-        <li>\u0421\u043E\u0445\u0440\u0430\u043D\u044F\u0439\u0442\u0435 <strong>\u0432\u0441\u044E \u043F\u0435\u0440\u0435\u043F\u0438\u0441\u043A\u0443</strong> \u0441 \u0440\u0430\u0431\u043E\u0442\u043E\u0434\u0430\u0442\u0435\u043B\u0435\u043C</li>
-        <li>\u0417\u0430\u043F\u0438\u0448\u0438\u0442\u0435 \u043A\u043E\u043D\u0442\u0430\u043A\u0442\u044B \u043F\u043E\u0441\u043E\u043B\u044C\u0441\u0442\u0432\u0430 <strong>\u0434\u043E \u0432\u044B\u043B\u0435\u0442\u0430</strong></li>
-        <li>\u0420\u0430\u0441\u0441\u043A\u0430\u0436\u0438\u0442\u0435 \u0440\u043E\u0434\u0441\u0442\u0432\u0435\u043D\u043D\u0438\u043A\u0430\u043C, <strong>\u043A\u0443\u0434\u0430 \u0438 \u043A \u043A\u043E\u043C\u0443</strong> \u0435\u0434\u0435\u0442\u0435</li>
+        <li><strong>Никогда</strong> не отдавайте оригинал паспорта</li>
+        <li>Храните <strong>копии всех документов</strong> отдельно + фото в телефоне</li>
+        <li>Сохраняйте <strong>всю переписку</strong> с работодателем</li>
+        <li>Запишите контакты посольства <strong>до вылета</strong></li>
+        <li>Расскажите родственникам, <strong>куда и к кому</strong> едете</li>
       </ul>
     </div>`;
 }
@@ -138,120 +163,149 @@ function renderMoney(c) {
   return `
     <div class="stats-row">
       <div class="stat-box"><span class="num" style="font-size:15px">${c.rate}</span><span class="label">${c.currency}</span></div>
-      <div class="stat-box"><span class="num" style="font-size:13px">${c.minWage.length > 30 ? c.minWage.substring(0,28)+'\u2026' : c.minWage}</span><span class="label">\u041C\u0438\u043D. \u0437\u0430\u0440\u043F\u043B\u0430\u0442\u0430</span></div>
+      <div class="stat-box"><span class="num" style="font-size:13px">${c.minWage.length > 30 ? c.minWage.substring(0,28)+'…' : c.minWage}</span><span class="label">Мин. зарплата</span></div>
     </div>
-    <div class="info-card tip-card">
-      <h3><span class="icon">\uD83D\uDCB0</span> \u041F\u0440\u0430\u0432\u0438\u043B\u0430 \u0431\u0435\u0437\u043E\u043F\u0430\u0441\u043D\u043E\u0441\u0442\u0438 \u0441 \u0434\u0435\u043D\u044C\u0433\u0430\u043C\u0438</h3>
+    <div class="info-card tip-card"><h3><span class="icon">💰</span> Правила безопасности с деньгами</h3>
       <ul>
-        <li>\u041F\u043E\u043B\u0443\u0447\u0430\u0439\u0442\u0435 \u0437\u0430\u0440\u043F\u043B\u0430\u0442\u0443 \u0442\u043E\u043B\u044C\u043A\u043E <strong>\u043D\u0430 \u0431\u0430\u043D\u043A\u043E\u0432\u0441\u043A\u0438\u0439 \u0441\u0447\u0451\u0442</strong> \u0441 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u0435\u043C</li>
-        <li>\u0421\u043E\u0445\u0440\u0430\u043D\u044F\u0439\u0442\u0435 <strong>\u0432\u0441\u0435 \u0440\u0430\u0441\u0447\u0451\u0442\u043D\u044B\u0435 \u043B\u0438\u0441\u0442\u043A\u0438</strong> \u0438 \u0432\u044B\u043F\u0438\u0441\u043A\u0438</li>
-        <li>\u041F\u0435\u0440\u0435\u0432\u043E\u0434\u0438\u0442\u0435 \u0434\u0435\u043D\u044C\u0433\u0438 \u0434\u043E\u043C\u043E\u0439 \u0442\u043E\u043B\u044C\u043A\u043E \u0447\u0435\u0440\u0435\u0437 <strong>\u0431\u0430\u043D\u043A\u0438 \u0438 \u043B\u0438\u0446\u0435\u043D\u0437\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0435 \u0441\u0435\u0440\u0432\u0438\u0441\u044B</strong></li>
-        <li><strong>\u041D\u0435 \u043F\u0435\u0440\u0435\u0434\u0430\u0432\u0430\u0439\u0442\u0435 \u0434\u0435\u043D\u044C\u0433\u0438</strong> \u0447\u0435\u0440\u0435\u0437 \u00AB\u0437\u043D\u0430\u043A\u043E\u043C\u044B\u0445\u00BB \u2014 \u043D\u0435 \u0432\u0435\u0440\u043D\u0451\u0442\u0435 \u043F\u0440\u0438 \u043F\u043E\u0442\u0435\u0440\u0435</li>
-        <li><strong>\u041D\u0435 \u0445\u0440\u0430\u043D\u0438\u0442\u0435 \u0432\u0441\u0451 \u043D\u0430\u043B\u0438\u0447\u043D\u044B\u043C\u0438</strong> \u2014 \u0440\u0430\u0437\u0434\u0435\u043B\u0438\u0442\u0435: \u0441\u0447\u0451\u0442 + \u043D\u0430\u043B\u0438\u0447\u043D\u044B\u0435 + \u0440\u0435\u0437\u0435\u0440\u0432</li>
-        <li>\u041D\u0438\u043A\u043E\u043C\u0443 \u043D\u0435 \u0434\u0430\u0432\u0430\u0439\u0442\u0435 <strong>\u043A\u0430\u0440\u0442\u0443 \u0438 PIN-\u043A\u043E\u0434</strong></li>
+        <li>Получайте зарплату только <strong>на банковский счёт</strong> с подтверждением</li>
+        <li>Сохраняйте <strong>все расчётные листки</strong> и выписки</li>
+        <li>Переводите деньги домой через <strong>банки и лицензированные сервисы</strong></li>
+        <li><strong>Не передавайте деньги</strong> через «знакомых»</li>
+        <li><strong>Не храните всё наличными</strong> — разделите: счёт + наличные + резерв</li>
+        <li>Никому не давайте <strong>карту и PIN-код</strong></li>
       </ul>
     </div>
-    <div class="info-card red-flag">
-      <h3><span class="icon">\u26A0\uFE0F</span> \u0424\u0438\u043D\u0430\u043D\u0441\u043E\u0432\u044B\u0435 \u043B\u043E\u0432\u0443\u0448\u043A\u0438</h3>
+    <div class="info-card red-flag"><h3><span class="icon">⚠️</span> Финансовые ловушки</h3>
       <ul>
-        <li>\u0417\u0430\u0440\u043F\u043B\u0430\u0442\u0430 \u00AB\u0432 \u043A\u043E\u043D\u0432\u0435\u0440\u0442\u0435\u00BB \u0431\u0435\u0437 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u043E\u0432 \u2014 <strong>\u043F\u043E\u0442\u043E\u043C \u043D\u0435 \u0434\u043E\u043A\u0430\u0436\u0435\u0442\u0435</strong></li>
-        <li>\u041A\u0440\u0435\u0434\u0438\u0442\u044B \u0438 \u0437\u0430\u0439\u043C\u044B \u043D\u0430 \u043C\u0435\u0441\u0442\u0435 \u2014 <strong>\u0434\u043E\u043B\u0433\u043E\u0432\u0430\u044F \u044F\u043C\u0430</strong></li>
-        <li>\u00AB\u0412\u044B\u0433\u043E\u0434\u043D\u044B\u0439 \u043E\u0431\u043C\u0435\u043D\u00BB \u0447\u0435\u0440\u0435\u0437 \u043F\u043E\u0441\u0440\u0435\u0434\u043D\u0438\u043A\u043E\u0432 \u2014 <strong>\u0440\u0438\u0441\u043A \u043F\u043E\u0442\u0435\u0440\u0438 \u0434\u0435\u043D\u0435\u0433</strong></li>
-        <li>\u041F\u043E\u0434\u043F\u0438\u0441\u0430\u043D\u0438\u0435 \u0444\u0438\u043D\u0430\u043D\u0441\u043E\u0432\u044B\u0445 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u043E\u0432 <strong>\u0431\u0435\u0437 \u043F\u043E\u043D\u0438\u043C\u0430\u043D\u0438\u044F \u0441\u043E\u0434\u0435\u0440\u0436\u0430\u043D\u0438\u044F</strong></li>
+        <li>Зарплата «в конверте» без документов — <strong>потом не докажете</strong></li>
+        <li>Кредиты и займы на месте — <strong>долговая яма</strong></li>
+        <li>«Выгодный обмен» через посредников — <strong>риск потери денег</strong></li>
+        <li>Подписание финансовых документов <strong>без понимания содержания</strong></li>
       </ul>
     </div>`;
 }
 
+function renderFaq(c) {
+  const faqs = [
+    { q: '😰 А если работодатель заберёт паспорт?', a: 'Это <strong>незаконно</strong> во всех странах Залива. Ваш паспорт — это ваша собственность. Если забрали — фиксируйте факт и обращайтесь в ' + c.laborName + '. Это серьёзное нарушение, и закон на вашей стороне.' },
+    { q: '😰 А если не заплатят зарплату?', a: 'Подайте жалобу в ' + c.laborName + ' (тел: ' + c.laborHotline + '). Во всех странах Залива есть системы контроля зарплат. Сохраняйте контракт и расчётные листки — это ваши доказательства.' },
+    { q: '😰 А если захочу уехать домой?', a: 'Имеете право, но если контракт не закончен — читайте условия досрочного расторжения. Могут быть финансовые последствия (оплата визы, билета). Обсудите с агентством до принятия решения.' },
+    { q: '😰 А если заболею?', a: 'Если есть медицинская страховка (проверьте контракт) — обращайтесь в больницу. Сообщите работодателю. Хронические болезни, о которых не сказали заранее — за ваш счёт.' },
+    { q: '😰 А если условия не как обещали?', a: 'Сравните реальные условия с тем, что написано в контракте. Если контракт нарушен — жалуйтесь в ' + c.laborName + '. Если обещали устно, а в контракте другое — к сожалению, действует контракт.' },
+    { q: '😰 Первый месяц очень тяжело — это нормально?', a: '<strong>Да, это нормально.</strong> Первые 2–4 недели — самые сложные: другой климат, еда, язык, одиночество. Большинство через это проходят. Дайте себе время — станет легче.' },
+    { q: '😰 Могу ли я сменить работодателя?', a: 'Да, но только через <strong>официальные каналы</strong>. Самовольный уход грозит штрафами и чёрным списком стран Залива. Обсудите с агентством.' },
+    { q: '😰 А если кто-то угрожает или применяет насилие?', a: 'Звоните в полицию: <strong>' + c.police + '</strong>. Потом — в посольство. Это не нормально и не ваша вина. Вас защитит закон.' },
+  ];
+
+  return faqs.map(f =>
+    `<div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">${f.q}<span class="arrow">▼</span></div>
+      <div class="faq-a">${f.a}</div>
+    </div>`
+  ).join('');
+}
+
 function renderContacts(c) {
-  let html = `<div class="info-card"><h3><span class="icon">\uD83C\uDD98</span> \u042D\u043A\u0441\u0442\u0440\u0435\u043D\u043D\u044B\u0435 \u0441\u043B\u0443\u0436\u0431\u044B</h3></div>`;
-  html += `<div class="contact-item"><div><span class="label">\u041F\u043E\u043B\u0438\u0446\u0438\u044F</span></div><div class="value"><a href="tel:${c.police}">${c.police}</a></div></div>`;
-  html += `<div class="contact-item"><div><span class="label">\u0421\u043A\u043E\u0440\u0430\u044F \u043F\u043E\u043C\u043E\u0449\u044C</span></div><div class="value"><a href="tel:${c.ambulance}">${c.ambulance}</a></div></div>`;
-
+  let html = `<div class="info-card"><h3><span class="icon">🆘</span> Экстренные службы</h3></div>`;
+  html += `<div class="contact-item"><div><span class="label">Полиция</span></div><div class="value"><a href="tel:${c.police}">${c.police}</a></div></div>`;
+  html += `<div class="contact-item"><div><span class="label">Скорая помощь</span></div><div class="value"><a href="tel:${c.ambulance}">${c.ambulance}</a></div></div>`;
   html += `<div class="divider"></div>`;
-  html += `<div class="info-card"><h3><span class="icon">\u2696\uFE0F</span> \u0422\u0440\u0443\u0434\u043E\u0432\u044B\u0435 \u043F\u0440\u0430\u0432\u0430 \u2014 ${c.laborName}</h3></div>`;
-  html += `<div class="contact-item"><div><span class="label">\u0422\u0435\u043B\u0435\u0444\u043E\u043D</span></div><div class="value" style="font-size:13px">${c.laborPhone}</div></div>`;
-  html += `<div class="contact-item"><div><span class="label">\u0413\u043E\u0440\u044F\u0447\u0430\u044F \u043B\u0438\u043D\u0438\u044F</span></div><div class="value" style="font-size:14px">${c.laborHotline}</div></div>`;
-
+  html += `<div class="info-card"><h3><span class="icon">⚖️</span> Трудовые права — ${c.laborName}</h3></div>`;
+  html += `<div class="contact-item"><div><span class="label">Телефон</span></div><div class="value" style="font-size:13px">${c.laborPhone}</div></div>`;
+  html += `<div class="contact-item"><div><span class="label">Горячая линия</span></div><div class="value" style="font-size:14px">${c.laborHotline}</div></div>`;
   if (c.antiTrafficking) {
-    html += `<div class="contact-item" style="border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.06)"><div><span class="label">\u0422\u043E\u0440\u0433\u043E\u0432\u043B\u044F \u043B\u044E\u0434\u044C\u043C\u0438</span></div><div class="value" style="color:var(--danger);font-size:13px">${c.antiTrafficking}</div></div>`;
+    html += `<div class="contact-item" style="border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.06)"><div><span class="label">Торговля людьми</span></div><div class="value" style="color:var(--danger);font-size:13px">${c.antiTrafficking}</div></div>`;
   }
-
   html += `<div class="divider"></div>`;
-  html += `<div class="embassy-card"><h3><span class="icon">\uD83C\uDDF0\uD83C\uDDEC</span> ${c.embassy}</h3>`;
-  html += `<p style="margin-top:8px"><strong>\u0410\u0434\u0440\u0435\u0441:</strong> ${c.embassyAddr}</p>`;
-  if (c.embassyPhone) html += `<p><strong>\u0422\u0435\u043B\u0435\u0444\u043E\u043D:</strong> <a href="tel:${c.embassyPhone}" style="color:var(--accent)">${c.embassyPhone}</a></p>`;
-  if (c.embassyHotline) html += `<p><strong>\u0413\u043E\u0440\u044F\u0447\u0430\u044F \u043B\u0438\u043D\u0438\u044F:</strong> <a href="tel:${c.embassyHotline}" style="color:var(--accent)">${c.embassyHotline}</a></p>`;
+  html += `<div class="embassy-card"><h3><span class="icon">🇰🇬</span> ${c.embassy}</h3>`;
+  html += `<p style="margin-top:8px"><strong>Адрес:</strong> ${c.embassyAddr}</p>`;
+  if (c.embassyPhone) html += `<p><strong>Телефон:</strong> <a href="tel:${c.embassyPhone}" style="color:var(--accent)">${c.embassyPhone}</a></p>`;
+  if (c.embassyHotline) html += `<p><strong>Горячая линия:</strong> <a href="tel:${c.embassyHotline}" style="color:var(--accent)">${c.embassyHotline}</a></p>`;
   if (c.embassyEmail) html += `<p><strong>Email:</strong> <a href="mailto:${c.embassyEmail}" style="color:var(--accent)">${c.embassyEmail}</a></p>`;
   if (c.embassyNote) html += `<p style="margin-top:6px;color:var(--text-dim);font-style:italic">${c.embassyNote}</p>`;
   html += `</div>`;
-
-  html += `<div class="info-card"><h3><span class="icon">\uD83C\uDF10</span> \u041F\u043E\u043B\u0435\u0437\u043D\u044B\u0435 \u0441\u0441\u044B\u043B\u043A\u0438</h3>
-    <p><strong>migrant.kg</strong> \u2014 \u0432\u0430\u043A\u0430\u043D\u0441\u0438\u0438 \u0437\u0430 \u0440\u0443\u0431\u0435\u0436\u043E\u043C \u0438 \u0438\u043D\u0444\u043E\u0440\u043C\u0430\u0446\u0438\u044F</p>
-    <p style="margin-top:6px"><strong>mfa.gov.kg</strong> \u2014 \u043A\u043E\u043D\u0442\u0430\u043A\u0442\u044B \u0432\u0441\u0435\u0445 \u043F\u043E\u0441\u043E\u043B\u044C\u0441\u0442\u0432 \u041A\u0420</p>
+  html += `<div class="info-card"><h3><span class="icon">🌐</span> Полезные ссылки</h3>
+    <p><strong>Telegram: @legacy_kg</strong> — вакансии за рубежом</p>
+    <p style="margin-top:6px"><strong>mfa.gov.kg</strong> — контакты посольств КР</p>
   </div>`;
-
   return html;
+}
+
+function renderPack(c) {
+  return `
+    <div class="info-card pack-card">
+      <h3><span class="icon">📄</span> Документы</h3>
+      <div class="pack-check"><span class="pack-icon">🛂</span><div class="pack-text"><strong>Загранпаспорт</strong> — проверьте срок (минимум 6 месяцев)</div></div>
+      <div class="pack-check"><span class="pack-icon">📋</span><div class="pack-text"><strong>Копия контракта</strong> — бумажная + фото в телефоне</div></div>
+      <div class="pack-check"><span class="pack-icon">📸</span><div class="pack-text"><strong>Фото всех документов</strong> — в облако (Google Drive / iCloud)</div></div>
+      <div class="pack-check"><span class="pack-icon">🏥</span><div class="pack-text"><strong>Медицинские справки</strong> — результаты обследования</div></div>
+      <div class="pack-check"><span class="pack-icon">📷</span><div class="pack-text"><strong>Фото 3×4</strong> — 4-6 штук на всякий случай</div></div>
+    </div>
+    <div class="info-card pack-card">
+      <h3><span class="icon">👗</span> Одежда</h3>
+      <div class="pack-check"><span class="pack-icon">👕</span><div class="pack-text"><strong>Закрытая одежда</strong> — плечи и колени. Это обязательно вне работы</div></div>
+      <div class="pack-check"><span class="pack-icon">🧣</span><div class="pack-text"><strong>Шарф / палантин</strong> — пригодится для мечетей и консервативных мест</div></div>
+      <div class="pack-check"><span class="pack-icon">👟</span><div class="pack-text"><strong>Удобная обувь</strong> — для работы на ногах весь день</div></div>
+      <div class="pack-check"><span class="pack-icon">🧴</span><div class="pack-text"><strong>Солнцезащитный крем</strong> — SPF 50+, солнце очень агрессивное</div></div>
+    </div>
+    <div class="info-card pack-card">
+      <h3><span class="icon">🔌</span> Техника и связь</h3>
+      <div class="pack-check"><span class="pack-icon">🔌</span><div class="pack-text"><strong>Адаптер для розеток</strong> — ${c.plug}. Купите заранее!</div></div>
+      <div class="pack-check"><span class="pack-icon">📱</span><div class="pack-text"><strong>SIM-карта</strong> — ${c.sim}</div></div>
+      <div class="pack-check"><span class="pack-icon">🔋</span><div class="pack-text"><strong>Повербанк</strong> — для зарядки в дороге</div></div>
+      <div class="pack-check"><span class="pack-icon">💳</span><div class="pack-text"><strong>Банковская карта</strong> — ${c.currency_tip}</div></div>
+    </div>
+    <div class="info-card pack-card">
+      <h3><span class="icon">💊</span> Здоровье</h3>
+      <div class="pack-check"><span class="pack-icon">💊</span><div class="pack-text"><strong>Аптечка</strong> — обезболивающие, от живота, от аллергии, пластыри</div></div>
+      <div class="pack-check"><span class="pack-icon">🩹</span><div class="pack-text"><strong>Свои лекарства</strong> — если принимаете постоянно (с рецептом на EN!)</div></div>
+      <div class="pack-check"><span class="pack-icon">🕶️</span><div class="pack-text"><strong>Солнечные очки</strong> — солнце в Заливе очень яркое</div></div>
+      <div class="pack-check"><span class="pack-icon">💧</span><div class="pack-text"><strong>Бутылка для воды</strong> — пить нужно МНОГО, особенно летом</div></div>
+    </div>
+    <div class="info-card" style="border-left:3px solid var(--danger)">
+      <h3><span class="icon">⚠️</span> Не берите!</h3>
+      <div class="pack-check"><span class="pack-icon">🚫</span><div class="pack-text"><strong>Лекарства без рецепта</strong> — некоторые обычные препараты запрещены в Заливе (кодеин, трамадол и др.)</div></div>
+      <div class="pack-check"><span class="pack-icon">🚫</span><div class="pack-text"><strong>Электронные сигареты</strong> — могут быть ограничения на ввоз</div></div>
+      <div class="pack-check"><span class="pack-icon">🚫</span><div class="pack-text"><strong>Откровенные вещи</strong> — мини-юбки, глубокие декольте — не для этого региона</div></div>
+    </div>`;
 }
 
 function renderChecklist(c) {
   return `
-    <div class="info-card">
-      <h3><span class="icon">\u2705</span> \u0414\u043E \u0432\u044B\u043B\u0435\u0442\u0430</h3>
+    <div class="info-card"><h3><span class="icon">✅</span> До вылета</h3>
       <ul class="checklist">
-        <li>\u041F\u0440\u043E\u0432\u0435\u0440\u0438\u0442\u044C \u0441\u0440\u043E\u043A <strong>\u0437\u0430\u0433\u0440\u0430\u043D\u043F\u0430\u0441\u043F\u043E\u0440\u0442\u0430</strong> (\u043D\u0435 \u043C\u0435\u043D\u0435\u0435 6 \u043C\u0435\u0441.)</li>
-        <li>\u041F\u043E\u043B\u0443\u0447\u0438\u0442\u044C <strong>\u043A\u043E\u043F\u0438\u044E \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442\u0430</strong> \u043D\u0430 \u043F\u043E\u043D\u044F\u0442\u043D\u043E\u043C \u044F\u0437\u044B\u043A\u0435</li>
-        <li>\u0421\u0444\u043E\u0442\u043E\u0433\u0440\u0430\u0444\u0438\u0440\u043E\u0432\u0430\u0442\u044C <strong>\u0432\u0441\u0435 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B</strong> \u0438 \u0441\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u0432 \u043E\u0431\u043B\u0430\u043A\u0435</li>
-        <li>\u0417\u0430\u043F\u0438\u0441\u0430\u0442\u044C \u043A\u043E\u043D\u0442\u0430\u043A\u0442\u044B <strong>\u043F\u043E\u0441\u043E\u043B\u044C\u0441\u0442\u0432\u0430 \u0438 \u0433\u043E\u0440\u044F\u0447\u0438\u0445 \u043B\u0438\u043D\u0438\u0439</strong></li>
-        <li>\u0421\u043E\u043E\u0431\u0449\u0438\u0442\u044C \u0440\u043E\u0434\u043D\u044B\u043C <strong>\u0430\u0434\u0440\u0435\u0441 \u0440\u0430\u0431\u043E\u0442\u043E\u0434\u0430\u0442\u0435\u043B\u044F</strong> \u0438 \u043A\u043E\u043D\u0442\u0430\u043A\u0442\u044B</li>
-        <li>\u0423\u0442\u043E\u0447\u043D\u0438\u0442\u044C, \u043A\u0442\u043E \u043E\u043F\u043B\u0430\u0447\u0438\u0432\u0430\u0435\u0442 <strong>\u0431\u0438\u043B\u0435\u0442, \u0432\u0438\u0437\u0443, \u0436\u0438\u043B\u044C\u0451</strong></li>
-        <li>\u0412\u0437\u044F\u0442\u044C <strong>\u043C\u0435\u0434\u0438\u0446\u0438\u043D\u0441\u043A\u0438\u0435 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B</strong> (\u0441\u043F\u0440\u0430\u0432\u043A\u0438, \u043F\u0440\u0438\u0432\u0438\u0432\u043A\u0438)</li>
-        <li>\u0412\u0441\u0442\u0430\u0442\u044C \u043D\u0430 <strong>\u043A\u043E\u043D\u0441\u0443\u043B\u044C\u0441\u043A\u0438\u0439 \u0443\u0447\u0451\u0442</strong> \u043F\u043E\u0441\u043B\u0435 \u043F\u0440\u0438\u0435\u0437\u0434\u0430</li>
+        <li>Проверить срок <strong>загранпаспорта</strong> (не менее 6 мес.)</li>
+        <li>Получить <strong>копию контракта</strong> на понятном языке</li>
+        <li>Сфотографировать <strong>все документы</strong> и сохранить в облаке</li>
+        <li>Записать контакты <strong>посольства и горячих линий</strong></li>
+        <li>Сообщить родным <strong>адрес работодателя</strong> и контакты</li>
+        <li>Уточнить, кто оплачивает <strong>билет, визу, жильё</strong></li>
+        <li>Взять <strong>медицинские документы</strong> (справки, прививки)</li>
+        <li>Купить <strong>адаптер для розеток</strong> (${c.plug})</li>
+        <li>Встать на <strong>консульский учёт</strong> после приезда</li>
       </ul>
     </div>
-    <div class="info-card">
-      <h3><span class="icon">\uD83D\uDCF1</span> \u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u0432 \u0442\u0435\u043B\u0435\u0444\u043E\u043D</h3>
+    <div class="info-card"><h3><span class="icon">📱</span> Сохранить в телефон</h3>
       <ul class="checklist">
-        <li>\u0424\u043E\u0442\u043E <strong>\u043F\u0430\u0441\u043F\u043E\u0440\u0442\u0430</strong> (\u0432\u0441\u0435 \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u044B)</li>
-        <li>\u0424\u043E\u0442\u043E <strong>\u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442\u0430</strong></li>
-        <li>\u0424\u043E\u0442\u043E <strong>\u0432\u0438\u0437\u044B</strong></li>
-        <li>\u041D\u043E\u043C\u0435\u0440 <strong>\u043F\u043E\u043B\u0438\u0446\u0438\u0438: ${c.police}</strong></li>
-        <li>\u041D\u043E\u043C\u0435\u0440 <strong>\u0442\u0440\u0443\u0434\u043E\u0432\u043E\u0439 \u0436\u0430\u043B\u043E\u0431\u044B: ${c.laborHotline}</strong></li>
-        ${c.embassyPhone ? `<li>\u041D\u043E\u043C\u0435\u0440 <strong>\u043F\u043E\u0441\u043E\u043B\u044C\u0441\u0442\u0432\u0430: ${c.embassyPhone}</strong></li>` : ''}
-        <li>\u0410\u0434\u0440\u0435\u0441 <strong>\u043F\u043E\u0441\u043E\u043B\u044C\u0441\u0442\u0432\u0430</strong></li>
+        <li>Фото <strong>паспорта</strong> (все страницы)</li>
+        <li>Фото <strong>контракта</strong></li>
+        <li>Фото <strong>визы</strong></li>
+        <li>Номер <strong>полиции: ${c.police}</strong></li>
+        <li>Номер <strong>трудовой жалобы: ${c.laborHotline}</strong></li>
+        ${c.embassyPhone ? `<li>Номер <strong>посольства: ${c.embassyPhone}</strong></li>` : ''}
+        <li>Адрес <strong>посольства</strong></li>
       </ul>
     </div>
-    <div class="info-card red-flag">
-      <h3><span class="icon">\uD83C\uDD98</span> \u0415\u0441\u043B\u0438 \u0447\u0442\u043E-\u0442\u043E \u043F\u043E\u0448\u043B\u043E \u043D\u0435 \u0442\u0430\u043A</h3>
+    <div class="info-card red-flag"><h3><span class="icon">🆘</span> Если что-то пошло не так</h3>
       <ul>
-        <li><strong>\u041D\u0435 \u043F\u0430\u043D\u0438\u043A\u0443\u0439\u0442\u0435</strong> \u2014 \u0443 \u0432\u0430\u0441 \u0435\u0441\u0442\u044C \u043F\u0440\u0430\u0432\u0430 \u043F\u043E \u0437\u0430\u043A\u043E\u043D\u0443</li>
-        <li>\u041F\u043E\u0437\u0432\u043E\u043D\u0438\u0442\u0435 \u0432 <strong>${c.laborName}</strong> \u043F\u043E \u0442\u0440\u0443\u0434\u043E\u0432\u044B\u043C \u0432\u043E\u043F\u0440\u043E\u0441\u0430\u043C</li>
-        <li>\u0421\u0432\u044F\u0436\u0438\u0442\u0435\u0441\u044C \u0441 <strong>\u043F\u043E\u0441\u043E\u043B\u044C\u0441\u0442\u0432\u043E\u043C \u041A\u0420</strong> \u043F\u0440\u0438 \u0441\u0435\u0440\u044C\u0451\u0437\u043D\u044B\u0445 \u043F\u0440\u043E\u0431\u043B\u0435\u043C\u0430\u0445</li>
-        <li>\u041D\u0430\u043F\u0438\u0448\u0438\u0442\u0435 \u0436\u0430\u043B\u043E\u0431\u0443 \u2014 \u044D\u0442\u043E \u043C\u043E\u0436\u043D\u043E \u0441\u0434\u0435\u043B\u0430\u0442\u044C <strong>\u043E\u043D\u043B\u0430\u0439\u043D</strong></li>
-        <li>\u041D\u0435 \u043F\u043E\u0434\u043F\u0438\u0441\u044B\u0432\u0430\u0439\u0442\u0435 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B <strong>\u043F\u043E\u0434 \u0434\u0430\u0432\u043B\u0435\u043D\u0438\u0435\u043C</strong></li>
-        <li>\u0415\u0441\u043B\u0438 \u0443\u0433\u0440\u043E\u0436\u0430\u044E\u0442 \u2014 \u0437\u0432\u043E\u043D\u0438\u0442\u0435 <strong>${c.police}</strong> (\u043F\u043E\u043B\u0438\u0446\u0438\u044F)</li>
+        <li><strong>Не паникуйте</strong> — у вас есть права по закону</li>
+        <li>Позвоните в <strong>${c.laborName}</strong> по трудовым вопросам</li>
+        <li>Свяжитесь с <strong>посольством КР</strong> при серьёзных проблемах</li>
+        <li>Напишите жалобу — это можно сделать <strong>онлайн</strong></li>
+        <li>Не подписывайте документы <strong>под давлением</strong></li>
+        <li>Если угрожают — звоните <strong>${c.police}</strong> (полиция)</li>
       </ul>
     </div>`;
 }
 
-// ── Event delegation ──
-
-countryGrid.addEventListener('click', (e) => {
-  const btn = e.target.closest('[data-country]');
-  if (!btn) return;
-  activeCountry = btn.dataset.country;
-  activeSection = 'overview';
-  renderCountries();
-  renderTabs();
-  renderContent();
-});
-
-tabsEl.addEventListener('click', (e) => {
-  const btn = e.target.closest('[data-tab]');
-  if (!btn) return;
-  activeSection = btn.dataset.tab;
-  renderTabs();
-  renderContent();
-});
-
-// ── Init ──
 renderCountries();

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'legacy-guide-v1';
+const CACHE_NAME = 'legacy-guide-v2';
 const ASSETS = [
   './',
   'index.html',

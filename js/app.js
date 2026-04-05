@@ -308,4 +308,25 @@ function renderChecklist(c) {
     </div>`;
 }
 
+// Share function
+function shareGuide() {
+  const shareData = {
+    title: 'Работа в арабских странах — Legacy',
+    text: 'Гайд для кыргызстанцев: права, контакты, чеклисты. Всё что нужно знать перед вылетом.',
+    url: window.location.href
+  };
+
+  if (navigator.share) {
+    navigator.share(shareData).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = 'Ссылка скопирована!';
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2000);
+    });
+  }
+}
+
 renderCountries();

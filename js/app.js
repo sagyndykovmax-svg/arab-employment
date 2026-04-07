@@ -12,7 +12,9 @@ function renderCountries() {
 
 function renderTabs() {
   const t = document.getElementById('tabs');
-  if (!activeCountry) { t.innerHTML = ''; return; }
+  const w = document.getElementById('tabsWrapper');
+  if (!activeCountry) { t.innerHTML = ''; w.style.display = 'none'; return; }
+  w.style.display = '';
   t.innerHTML = sections.map(s =>
     `<button class="tab-btn ${activeSection===s.id?'active':''}" onclick="selectTab('${s.id}')">${s.label}</button>`
   ).join('');
@@ -24,6 +26,7 @@ function selectCountry(id) {
   renderCountries();
   renderTabs();
   renderContent();
+  document.getElementById('tabsWrapper').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function selectTab(id) {
@@ -198,8 +201,8 @@ function renderFaq(c) {
   ];
 
   return faqs.map(f =>
-    `<div class="faq-item" onclick="this.classList.toggle('open')">
-      <div class="faq-q">${f.q}<span class="arrow">▼</span></div>
+    `<div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">${f.q}<span class="arrow">▼</span></div>
       <div class="faq-a">${f.a}</div>
     </div>`
   ).join('');
@@ -211,8 +214,9 @@ function renderContacts(c) {
   html += `<div class="contact-item"><div><span class="label">Скорая помощь</span></div><div class="value"><a href="tel:${c.ambulance}">${c.ambulance}</a></div></div>`;
   html += `<div class="divider"></div>`;
   html += `<div class="info-card"><h3><span class="icon">⚖️</span> Трудовые права — ${c.laborName}</h3></div>`;
-  html += `<div class="contact-item"><div><span class="label">Телефон</span></div><div class="value" style="font-size:13px">${c.laborPhone}</div></div>`;
-  html += `<div class="contact-item"><div><span class="label">Горячая линия</span></div><div class="value" style="font-size:14px">${c.laborHotline}</div></div>`;
+  const linkify = v => /^[+\d]/.test(v) ? `<a href="tel:${v.replace(/\s/g,'')}">${v}</a>` : v;
+  html += `<div class="contact-item"><div><span class="label">Телефон</span></div><div class="value" style="font-size:13px">${linkify(c.laborPhone)}</div></div>`;
+  html += `<div class="contact-item"><div><span class="label">Горячая линия</span></div><div class="value" style="font-size:14px">${linkify(c.laborHotline)}</div></div>`;
   if (c.antiTrafficking) {
     html += `<div class="contact-item" style="border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.06)"><div><span class="label">Торговля людьми</span></div><div class="value" style="color:var(--danger);font-size:13px">${c.antiTrafficking}</div></div>`;
   }
@@ -225,7 +229,7 @@ function renderContacts(c) {
   if (c.embassyNote) html += `<p style="margin-top:6px;color:var(--text-dim);font-style:italic">${c.embassyNote}</p>`;
   html += `</div>`;
   html += `<div class="info-card"><h3><span class="icon">🌐</span> Полезные ссылки</h3>
-    <p><strong>Telegram: @legacy_kg</strong> — вакансии за рубежом</p>
+    <p><a href="https://t.me/datamanager312" target="_blank" rel="noopener" style="color:var(--telegram);text-decoration:none"><strong>Telegram: @datamanager312</strong></a> — помощь с трудоустройством</p>
     <p style="margin-top:6px"><strong>mfa.gov.kg</strong> — контакты посольств КР</p>
   </div>`;
   return html;

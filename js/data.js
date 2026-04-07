@@ -143,12 +143,12 @@ const countries = {
 
 const sections = [
   { id: 'overview', label: '📊 О стране' },
-  { id: 'culture', label: '🕌 Культура' },
   { id: 'rights', label: '⚖️ Права' },
-  { id: 'redflags', label: '🚩 Красные флаги' },
+  { id: 'culture', label: '🕌 Культура' },
   { id: 'money', label: '💰 Деньги' },
-  { id: 'faq', label: '💬 Частые вопросы' },
-  { id: 'contacts', label: '📞 Контакты' },
   { id: 'pack', label: '📦 Что взять' },
   { id: 'checklist', label: '✅ Чеклист' },
+  { id: 'faq', label: '💬 Вопросы' },
+  { id: 'contacts', label: '📞 Контакты' },
+  { id: 'redflags', label: '🚩 Красные флаги' },
 ];

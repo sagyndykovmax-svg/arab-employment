@@ -1,4 +1,4 @@
-const CACHE_NAME = 'legacy-guide-v2';
+const CACHE_NAME = 'legacy-guide-v3';
 const ASSETS = [
   './',
   'index.html',
@@ -6,7 +6,8 @@ const ASSETS = [
   'js/data.js',
   'js/app.js',
   'img/logo.png',
-  'img/favicon2.png'
+  'img/favicon2.png',
+  'manifest.json'
 ];
 
 self.addEventListener('install', e => {
@@ -24,7 +25,33 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  const url = new URL(e.request.url);
+
+  // Network-first for HTML — always get fresh content
+  if (e.request.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname === '/' || url.pathname.endsWith('/')) {
+    e.respondWith(
+      fetch(e.request)
+        .then(response => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+          return response;
+        })
+        .catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // Cache-first for static assets (CSS, JS, images)
   e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request))
+    caches.match(e.request).then(r => {
+      if (r) return r;
+      return fetch(e.request).then(response => {
+        if (response.ok && url.origin === self.location.origin) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+        }
+        return response;
+      });
+    })
   );
 });

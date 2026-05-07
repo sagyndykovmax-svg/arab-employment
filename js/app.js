@@ -1,10 +1,38 @@
 let activeCountry = null;
 let activeSection = 'overview';
 
+/* === Deep linking via hash (#country/tab) === */
+function updateHash() {
+  if (activeCountry) {
+    history.replaceState(null, '', '#' + activeCountry + '/' + activeSection);
+  } else {
+    history.replaceState(null, '', window.location.pathname);
+  }
+}
+
+function readHash() {
+  const h = location.hash.replace('#', '');
+  if (!h) return;
+  const parts = h.split('/');
+  if (parts[0] && countries[parts[0]]) {
+    activeCountry = parts[0];
+    const validTab = sections.find(s => s.id === parts[1]);
+    activeSection = validTab ? parts[1] : 'overview';
+  }
+}
+
+window.addEventListener('hashchange', () => {
+  readHash();
+  renderCountries();
+  renderTabs();
+  renderContent();
+  scrollActiveTab();
+});
+
 function renderCountries() {
   const grid = document.getElementById('countryGrid');
   grid.innerHTML = Object.entries(countries).map(([id, c]) =>
-    `<button class="country-btn ${activeCountry===id?'active':''}" onclick="selectCountry('${id}')">
+    `<button class="country-btn ${activeCountry===id?'active':''}" onclick="selectCountry('${id}')" aria-label="${c.name}">
       <span class="flag">${c.flag}</span>${c.name}
     </button>`
   ).join('');
@@ -15,8 +43,12 @@ function renderTabs() {
   const w = document.getElementById('tabsWrapper');
   if (!activeCountry) { t.innerHTML = ''; w.style.display = 'none'; return; }
   w.style.display = '';
+  t.setAttribute('role', 'tablist');
+  t.setAttribute('aria-label', 'Разделы гайда');
   t.innerHTML = sections.map(s =>
-    `<button class="tab-btn ${activeSection===s.id?'active':''}" onclick="selectTab('${s.id}')">${s.label}</button>`
+    `<button class="tab-btn ${activeSection===s.id?'active':''}" onclick="selectTab('${s.id}')"
+      role="tab" aria-selected="${activeSection===s.id}" aria-controls="content"
+      id="tab-${s.id}">${s.label}</button>`
   ).join('');
 }
 
@@ -26,17 +58,30 @@ function selectCountry(id) {
   renderCountries();
   renderTabs();
   renderContent();
-  document.getElementById('tabsWrapper').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  updateHash();
+  setTimeout(() => {
+    document.getElementById('tabsWrapper').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    scrollActiveTab();
+  }, 50);
 }
 
 function selectTab(id) {
   activeSection = id;
   renderTabs();
   renderContent();
+  updateHash();
+  scrollActiveTab();
+}
+
+function scrollActiveTab() {
+  const active = document.querySelector('.tab-btn.active');
+  if (active) active.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
 }
 
 function renderContent() {
   const el = document.getElementById('content');
+  el.setAttribute('role', 'tabpanel');
+  el.setAttribute('aria-labelledby', 'tab-' + activeSection);
   if (!activeCountry) {
     el.innerHTML = '<div class="no-country"><span class="arrow">☝️</span>Выберите страну, куда едете</div>';
     return;
@@ -166,7 +211,7 @@ function renderMoney(c) {
   return `
     <div class="stats-row">
       <div class="stat-box"><span class="num" style="font-size:15px">${c.rate}</span><span class="label">${c.currency}</span></div>
-      <div class="stat-box"><span class="num" style="font-size:13px">${c.minWage.length > 30 ? c.minWage.substring(0,28)+'…' : c.minWage}</span><span class="label">Мин. зарплата</span></div>
+      <div class="stat-box"><span class="num stat-truncate" style="font-size:13px">${c.minWage}</span><span class="label">Мин. зарплата</span></div>
     </div>
     <div class="info-card tip-card"><h3><span class="icon">💰</span> Правила безопасности с деньгами</h3>
       <ul>
@@ -333,4 +378,19 @@ function shareGuide() {
   }
 }
 
+// Dynamic footer date
+(function updateFooterDate() {
+  const months = ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+  const d = new Date();
+  const el = document.querySelector('.site-footer span:first-child');
+  if (el) el.textContent = 'Обновлено: ' + months[d.getMonth()] + ' ' + d.getFullYear();
+})();
+
+// Init: read hash → render
+readHash();
 renderCountries();
+if (activeCountry) {
+  renderTabs();
+  renderContent();
+  setTimeout(scrollActiveTab, 100);
+}

@@ -1,3 +1,10 @@
+/**
+ * app.js — Arab Employment Guide
+ * NOTE: All render functions use innerHTML with data from data.js.
+ * This is safe because data.js is a static, trusted source bundled with the app.
+ * If data ever comes from user input or an API, sanitize before rendering.
+ */
+
 let activeCountry = null;
 let activeSection = 'overview';
 
@@ -45,11 +52,36 @@ function renderTabs() {
   w.style.display = '';
   t.setAttribute('role', 'tablist');
   t.setAttribute('aria-label', 'Разделы гайда');
-  t.innerHTML = sections.map(s =>
+  t.innerHTML = sections.map((s, i) =>
     `<button class="tab-btn ${activeSection===s.id?'active':''}" onclick="selectTab('${s.id}')"
       role="tab" aria-selected="${activeSection===s.id}" aria-controls="content"
+      tabindex="${activeSection===s.id ? 0 : -1}"
       id="tab-${s.id}">${s.label}</button>`
   ).join('');
+
+  // Keyboard navigation: arrow keys between tabs
+  t.querySelectorAll('.tab-btn').forEach((btn, i, btns) => {
+    btn.addEventListener('keydown', e => {
+      let target;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        target = btns[(i + 1) % btns.length];
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        target = btns[(i - 1 + btns.length) % btns.length];
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        target = btns[0];
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        target = btns[btns.length - 1];
+      }
+      if (target) { target.focus(); target.click(); }
+    });
+  });
+
+  // Update scroll indicator visibility
+  updateScrollIndicator();
 }
 
 function selectCountry(id) {
@@ -78,6 +110,19 @@ function scrollActiveTab() {
   if (active) active.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
 }
 
+/* === Scroll indicator for tabs overflow === */
+function updateScrollIndicator() {
+  const t = document.getElementById('tabs');
+  const w = document.getElementById('tabsWrapper');
+  if (!t || !w) return;
+  const hasOverflow = t.scrollWidth > t.clientWidth;
+  const atEnd = t.scrollLeft + t.clientWidth >= t.scrollWidth - 8;
+  w.classList.toggle('has-overflow', hasOverflow && !atEnd);
+}
+
+// Listen for tab scroll to update indicator
+document.getElementById('tabs')?.addEventListener('scroll', updateScrollIndicator);
+
 function renderContent() {
   const el = document.getElementById('content');
   el.setAttribute('role', 'tabpanel');
@@ -88,7 +133,13 @@ function renderContent() {
   }
   const c = countries[activeCountry];
   const renderers = { overview: renderOverview, culture: renderCulture, rights: renderRights, redflags: renderRedflags, money: renderMoney, faq: renderFaq, contacts: renderContacts, pack: renderPack, checklist: renderChecklist };
-  el.innerHTML = renderers[activeSection](c);
+
+  // Fade transition between tabs
+  el.classList.add('content-fade-out');
+  setTimeout(() => {
+    el.innerHTML = renderers[activeSection](c);
+    el.classList.remove('content-fade-out');
+  }, 150);
 }
 
 function renderOverview(c) {

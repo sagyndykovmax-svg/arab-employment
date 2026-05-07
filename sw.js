@@ -1,4 +1,5 @@
-const CACHE_NAME = 'legacy-guide-v3';
+const CACHE_NAME = 'legacy-guide-v4';
+const FONT_CACHE = 'legacy-fonts-v1';
 const ASSETS = [
   './',
   'index.html',
@@ -7,6 +8,7 @@ const ASSETS = [
   'js/app.js',
   'img/logo.png',
   'img/favicon2.png',
+  'img/og-image.png',
   'manifest.json'
 ];
 
@@ -18,7 +20,11 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+      Promise.all(
+        keys
+          .filter(k => k !== CACHE_NAME && k !== FONT_CACHE)
+          .map(k => caches.delete(k))
+      )
     )
   );
   self.clients.claim();
@@ -37,6 +43,22 @@ self.addEventListener('fetch', e => {
           return response;
         })
         .catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // Cache Google Fonts for offline use (stale-while-revalidate)
+  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+    e.respondWith(
+      caches.open(FONT_CACHE).then(cache =>
+        cache.match(e.request).then(cached => {
+          const fetched = fetch(e.request).then(response => {
+            if (response.ok) cache.put(e.request, response.clone());
+            return response;
+          }).catch(() => cached);
+          return cached || fetched;
+        })
+      )
     );
     return;
   }

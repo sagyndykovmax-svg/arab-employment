@@ -137,10 +137,40 @@ body {
   white-space: nowrap;
 }
 .tab-btn:hover { color: var(--text); }
+.tab-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .tab-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
 
+/* Scroll indicator — pulsing arrow when tabs overflow */
+.tabs-wrapper.has-overflow::before {
+  content: '→';
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  color: var(--accent);
+  font-size: 16px;
+  font-weight: 900;
+  animation: pulseArrow 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes pulseArrow {
+  0%, 100% { opacity: 0.4; transform: translateY(-50%) translateX(0); }
+  50% { opacity: 1; transform: translateY(-50%) translateX(3px); }
+}
+
 /* ===== Content ===== */
-.content { padding: 8px 16px 140px; max-width: 480px; margin: 0 auto; }
+.content {
+  padding: 8px 16px 100px;
+  max-width: 480px;
+  margin: 0 auto;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.content-fade-out {
+  opacity: 0;
+  transform: translateY(6px);
+}
 
 .info-card {
   background: var(--card);
@@ -148,7 +178,6 @@ body {
   border-radius: var(--radius);
   padding: 20px;
   margin-bottom: 14px;
-  animation: fadeUp 0.3s ease;
 }
 
 @keyframes fadeUp {
@@ -203,7 +232,6 @@ body {
   border-radius: var(--radius);
   padding: 16px;
   text-align: center;
-  animation: fadeUp 0.3s ease;
 }
 .stat-box .num { font-size: 22px; font-weight: 900; color: var(--accent); display: block; }
 .stat-box .num.stat-truncate {
@@ -240,7 +268,6 @@ b, strong { color: var(--text); font-weight: 700; }
   border-radius: var(--radius);
   padding: 20px;
   margin-bottom: 14px;
-  animation: fadeUp 0.3s ease;
 }
 .embassy-card h3 { color: var(--accent); }
 .embassy-card p { font-size: 14px; line-height: 1.7; color: var(--text-dim); }
@@ -254,7 +281,6 @@ b, strong { color: var(--text); font-weight: 700; }
   border-radius: 14px;
   margin-bottom: 10px;
   overflow: hidden;
-  animation: fadeUp 0.3s ease;
 }
 .faq-q {
   padding: 16px 18px;
@@ -350,7 +376,7 @@ b, strong { color: var(--text); font-weight: 700; }
 /* ===== Footer ===== */
 .site-footer {
   text-align: center;
-  padding: 20px 16px 80px;
+  padding: 20px 16px 90px;
   font-size: 12px;
   color: var(--text-dim);
   border-top: 1px solid var(--border);
@@ -398,7 +424,7 @@ b, strong { color: var(--text); font-weight: 700; }
 
   .content {
     max-width: 640px;
-    padding: 12px 24px 140px;
+    padding: 12px 24px 100px;
   }
 
   .site-footer { max-width: 640px; }

@@ -3,6 +3,15 @@
  * Source documents: 09.docx, 10.docx, 12.docx, 15_khg1E0F.docx, 18.docx, 20.docx
  */
 
+/* Shared embassy data for countries accredited via KR Embassy in Riyadh */
+const _riyadhEmbassy = {
+  embassy: 'Посольство КР в Саудовской Аравии',
+  embassyAddr: '6575 Amr Al Damri Street, Assafarat Dist., RIYADH 12511-3562',
+  embassyPhone: '+966 11 2293272',
+  embassyHotline: '+966 58 284 90 30',
+  embassyEmail: 'kgembassy.sa@mfa.gov.kg',
+};
+
 const countries = {
   uae: {
     name: 'ОАЭ', flag: '🇦🇪',
@@ -32,9 +41,7 @@ const countries = {
     minWage: 'Нет единой минималки — условия в контракте',
     police: '999', ambulance: '997',
     laborPhone: 'Минтруда (MOHRSD)', laborHotline: 'Через официальные сервисы', laborName: 'MOHRSD',
-    embassy: 'Посольство КР в Саудовской Аравии',
-    embassyAddr: '6575 Amr Al Damri Street, Assafarat Dist., RIYADH 12511-3562',
-    embassyPhone: '+966 11 2293272', embassyHotline: '+966 58 284 90 30', embassyEmail: 'kgembassy.sa@mfa.gov.kg',
+    ..._riyadhEmbassy,
     residenceDoc: 'Iqama (разрешение на проживание)',
     workHours: 'Стандартный рабочий день, в Рамадан — сокращённый',
     overtime: 'Часовая ставка + 50% от базовой зарплаты',
@@ -78,9 +85,9 @@ const countries = {
     minWage: 'Нет общей минималки в частном секторе (госсектор: 300 BHD)',
     police: '999', ambulance: '999',
     laborPhone: '+973 17506055', laborHotline: '995 (торговля людьми)', laborName: 'LMRA',
+    ..._riyadhEmbassy,
     embassy: 'Посольство КР в Саудовской Аравии (аккредитация на Бахрейн)',
     embassyAddr: 'RIYADH, 6575 Amr Al Damri Street',
-    embassyPhone: '+966 11 2293272', embassyHotline: '+966 58 284 90 30', embassyEmail: 'kgembassy.sa@mfa.gov.kg',
     residenceDoc: 'Work Permit + ID-карта',
     workHours: 'По контракту', overtime: 'По закону оплачивается',
     wageSystem: 'Wage Protection System',
@@ -100,9 +107,9 @@ const countries = {
     minWage: 'Нет национальной минималки — всё по контракту',
     police: '9999', ambulance: '9999',
     laborPhone: '+968 80077000', laborHotline: '+968 80077000', laborName: 'Минтруда Омана',
+    ..._riyadhEmbassy,
     embassy: 'Посольство КР в Саудовской Аравии (аккредитация на Оман)',
     embassyAddr: 'RIYADH, 6575 Amr Al Damri Street',
-    embassyPhone: '+966 11 2293272', embassyHotline: '+966 58 284 90 30', embassyEmail: 'kgembassy.sa@mfa.gov.kg',
     residenceDoc: 'Residence Permit через работодателя',
     workHours: 'По контракту', overtime: 'По контракту',
     wageSystem: 'Система защиты зарплаты',

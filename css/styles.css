@@ -415,11 +415,12 @@ b, strong { color: var(--text); font-weight: 700; }
     padding: 24px 24px;
   }
 
-  .tabs-wrapper::after { width: 16px; }
+  .tabs-wrapper::after { display: none; }
   .tabs {
     max-width: 640px;
     padding: 14px 24px;
-    padding-right: 24px;
+    flex-wrap: wrap;
+    overflow-x: visible;
   }
 
   .content {
